@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "109441503898",
+    "project_id": "flutter-project-24297",
+    "storage_bucket": "flutter-project-24297.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:109441503898:android:2aee8b5fa875ac0b5c0523",
+        "android_client_info": {
+          "package_name": "com.example.redmaestra1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpxY8-TjTrDaq_64zeLFfYdqn5HMek9fk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
