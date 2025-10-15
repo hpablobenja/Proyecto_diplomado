@@ -28,9 +28,10 @@ class ProfileScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: user.role.toLowerCase() != 'maestro' 
-          ? CustomAppBar(title: 'Mi Perfil')
-          : null,
+      appBar:
+          user.role.toLowerCase() != 'maestro'
+              ? CustomAppBar(title: 'Mi Perfil')
+              : null,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -88,6 +89,35 @@ class ProfileScreen extends StatelessWidget {
               label: Text('Editar Perfil'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accentColor,
+                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () async {
+                try {
+                  await authProvider.signOut();
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/login',
+                    (route) => false,
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error al cerrar sesión: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              icon: Icon(Icons.logout),
+              label: Text('Cerrar Sesión'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
                 padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),

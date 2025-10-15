@@ -1,7 +1,10 @@
 // lib/presentation/screens/courses/my_progress_screen.dart
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_filex/open_filex.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_styles.dart';
@@ -33,12 +36,14 @@ class _MyProgressScreenState extends State<MyProgressScreen> {
     });
   }
 
-  void _generateReport() async {
+  Future<void> _generateReport() async {
     final generatePdfReportUsecase = di.sl<GeneratePdfReportUsecase>();
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+    // Mostrar indicador de carga
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    scaffoldMessenger.showSnackBar(
+      const SnackBar(
         content: Text('Generando reporte PDF...'),
         backgroundColor: AppColors.primaryColor,
       ),
@@ -48,17 +53,24 @@ class _MyProgressScreenState extends State<MyProgressScreen> {
       final pdfBytes = await generatePdfReportUsecase.call(
         authProvider.currentUser!.uid,
       );
-      // Aquí se implementaría la lógica para guardar o compartir el archivo
-      // Por ejemplo, usando paquetes como 'path_provider' y 'open_filex'
-      print('Reporte PDF generado, tamaño: ${pdfBytes.length} bytes');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+
+      // Guardar el archivo PDF
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/documentos/reporte_usuario.pdf');
+      await file.create(recursive: true);
+      await file.writeAsBytes(pdfBytes);
+
+      // Abrir el archivo PDF
+      await OpenFilex.open(file.path);
+
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(
           content: Text('Reporte PDF generado exitosamente.'),
           backgroundColor: AppColors.successColor,
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      scaffoldMessenger.showSnackBar(
         SnackBar(
           content: Text('Error al generar el reporte: $e'),
           backgroundColor: AppColors.errorColor,
@@ -70,13 +82,12 @@ class _MyProgressScreenState extends State<MyProgressScreen> {
   @override
   Widget build(BuildContext context) {
     final progressProvider = Provider.of<ProgressProvider>(context);
-    final bool canGenerateReport = progressProvider.completedCourses.isNotEmpty;
 
     return Scaffold(
-      drawer: AppDrawer(),
+      drawer: const AppDrawer(),
       body:
           progressProvider.isLoading
-              ? Center(child: CircularProgressIndicator())
+              ? const Center(child: CircularProgressIndicator())
               : SingleChildScrollView(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -88,6 +99,10 @@ class _MyProgressScreenState extends State<MyProgressScreen> {
                       style: AppStyles.headline1,
                     ),
                     const SizedBox(height: 16),
+
+                    if (progressProvider.completedCourses.isEmpty)
+                      _buildEmptyState(),
+
                     ...progressProvider.completedCourses.map(
                       (course) => ListTile(
                         leading: Icon(
@@ -124,14 +139,14 @@ class _MyProgressScreenState extends State<MyProgressScreen> {
                     ),
                     const SizedBox(height: 32),
 
+                    // Botón de Generar Reporte
                     Center(
                       child: Column(
                         children: [
                           ElevatedButton.icon(
-                            onPressed:
-                                canGenerateReport ? _generateReport : null,
+                            onPressed: _generateReport,
                             icon: const Icon(Icons.picture_as_pdf),
-                            label: Text(
+                            label: const Text(
                               'Generar Reporte PDF',
                               style: AppStyles.buttonText,
                             ),
@@ -147,19 +162,52 @@ class _MyProgressScreenState extends State<MyProgressScreen> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          if (!canGenerateReport)
-                            Text(
-                              'Genera tu primer reporte cuando completes una microformación (visualiza al menos un video).',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: Colors.grey[700]),
-                              textAlign: TextAlign.center,
-                            ),
+                          Text(
+                            'Descargará el documento solicitado',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: Colors.grey[700]),
+                            textAlign: TextAlign.center,
+                          ),
                         ],
                       ),
                     ),
                   ],
                 ),
               ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      margin: const EdgeInsets.only(bottom: 24),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.school_outlined, size: 64, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text(
+            'Aún no has completado ninguna microformación',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[700],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Completa al menos una microformación para ver tu progreso aquí',
+            style: TextStyle(color: Colors.grey[500]),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 }

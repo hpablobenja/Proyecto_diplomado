@@ -47,7 +47,8 @@ dependencies:
   youtube_player_iframe: ^5.1.3
   google_fonts: ^6.1.0
   shared_preferences: ^2.2.2
-
+  path_provider: ^2.1.1
+  open_filex: ^4.7.0
 # Override temporal para evitar conflictos con el paquete 'web'
 dependency_overrides:
   web: ^0.5.1
